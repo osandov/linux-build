@@ -1,3 +1,6 @@
+import subprocess
+
+
 def _prompt_yes_no(prompt, default='yes'):
     """
     Prompt yes or no to a question.

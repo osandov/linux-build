@@ -5,7 +5,6 @@ Configure and build the Linux kernel.
 import os
 import shutil
 import subprocess
-import sys
 
 # Configuration make targets (from Linux make help).
 CONFIG_TARGETS = [
@@ -30,41 +29,48 @@ CONFIG_TARGETS = [
 ]
 
 
-def configure_kernel(args):
+def configure_kernel(source, target, old_config=None):
     """
     Configure the kernel.
+
+    Arguments:
+    source -- Kernel source directory
+    target -- Kernel configuration target. Must be one of CONFIG_TARGETS
+    old_config -- Old configuration file to copy
     """
 
-    if args.old_config:
-        shutil.copyfile(args.old_config, os.path.join(args.source, '.config'))
+    assert target in CONFIG_TARGETS
 
-    os.chdir(args.source)
+    if old_config:
+        shutil.copyfile(old_config, os.path.join(source, '.config'))
 
-    subprocess.check_call(['make', args.target])
+    os.chdir(source)
 
-    print('Run `%s make [options] %s` to build the kernel.' % (sys.argv[0], args.source))
+    subprocess.check_call(['make', target])
 
 
-def make_kernel(args):
+def make_kernel(source, log=None, jobs=1):
     """
     Build the kernel.
+
+    Arguments:
+    source -- Kernel source directory
+    log -- Log file for stdout and stderr from make
+    jobs -- Number of jobs to run simultaneously (i.e., make -j)
     """
 
-    os.chdir(args.source)
+    os.chdir(source)
 
-    make = subprocess.Popen(
-        ['make', '-j', str(args.jobs)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    tee = subprocess.Popen(['tee', args.log], stdin=make.stdout)
+    make_args = ['make', '-j', str(jobs)]
+    make = subprocess.Popen(make_args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    tee_args = ['tee', log]
+    tee = subprocess.Popen(tee_args, stdin=make.stdout)
     make.stdout.close()
 
     returncode = make.wait()
     if returncode:
-        print('make exited with status %d' % returncode, file=sys.stderr)
-        sys.exit(returncode)
+        raise subprocess.CalledProcessError(cmd=make_args, returncode=returncode)
 
     returncode = tee.wait()
     if returncode:
-        print('tee exited with status %d' % returncode, file=sys.stderr)
-        sys.exit(returncode)
-
-    print('Run `sudo %s install [options] %s` to install the kernel.' % (sys.argv[0], args.source))
+        raise subprocess.CalledProcessError(cmd=tee_args, returncode=returncode)

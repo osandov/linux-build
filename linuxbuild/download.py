@@ -16,14 +16,20 @@ from collections import OrderedDict
 from linuxbuild import _prompt_yes_no
 
 
-def list_releases(args):
+def list_releases(moniker=None, limit=0):
     """
     List currently available releases.
+
+    Arguments:
+    moniker -- kernel release moniker (e.g., mainline, stable, longterm, etc.).
+    Defaults to everything
+    limit -- maximum number of releases to list per moniker. Defaults to 0,
+    which is no limit
     """
 
     releases = get_releases()
 
-    if args.moniker is None:
+    if moniker is None:
         releases_by_moniker = OrderedDict()
 
         for release in releases['releases']:
@@ -36,34 +42,37 @@ def list_releases(args):
             first = False
 
             print('%s:' % moniker)
-            for release in r[:args.limit] if args.limit > 0 else r:
+            for release in r[:limit] if limit > 0 else r:
                 print(release['version'])
     else:
-        r = get_releases_by_moniker(releases, args.moniker)
-        for release in r[:args.limit] if args.limit > 0 else r:
+        r = get_releases_by_moniker(releases, moniker)
+        for release in r[:limit] if limit > 0 else r:
             print(release['version'])
 
 
-def download_latest_release(args):
+def download_release(version, verify=True):
     """
     Download, verify, and decompress the given kernel release from kernel.org,
     returning the untarred source path.
+
+    Arguments:
+    version -- Kernel version to download
+    verify -- Whether to verify the signature of the source tarball
     """
 
     print('Getting release information...')
     releases = get_releases()
-    version = args.version
+    version = version
 
     for release in releases['releases']:
         if release['version'] == version:
             break
     else:
-        print('Version %s not found.' % version, file=sys.stderr)
-        sys.exit(1)
+        raise ValueError('Version %s not found.' % version)
 
     print('Found version %s.' % (version))
     if not _prompt_yes_no('Download and extract?'):
-        sys.exit(1)
+        raise ValueError('User aborted.')
 
     print()
     print('Downloading release...')
@@ -75,7 +84,7 @@ def download_latest_release(args):
     source_tarball = decompress_release_source(source_xz)
     print('Decompressed tarball to %s.' % source_tarball)
 
-    if not args.skip_verify:
+    if verify:
         print()
         print('Verifying release...')
         verify_release_source(release)
@@ -86,8 +95,7 @@ def download_latest_release(args):
     source_path = untar_release_source(source_tarball)
     print('Extracted source to %s.' % source_path)
 
-    print()
-    print('Run `%s config [options] %s` to configure the kernel.' % (sys.argv[0], source_path))
+    return source_path
 
 
 def get_releases():
