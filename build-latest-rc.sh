@@ -7,7 +7,7 @@ usage () {
 Build and optionally install the latest Linux RC kernel.
 
 Installation:
-  -i    Also install the kernel (requires sudo)
+  -i    Also install the kernel, assuming mkinitcpio and grub (requires sudo)
 
 Miscellaneous:
   -h    Display this help message and exit"
@@ -46,5 +46,5 @@ linux-build.py config --old-config ~/linux-config "linux-$VERSION" olddefconfig
 cp "linux-$VERSION"/.config ~/linux-config
 linux-build.py make "linux-$VERSION"
 if [ ! -z "$INSTALL" ]; then
-    sudo linux-build.py install "linux-$VERSION" mainline
+    sudo linux-build.py install --initrd=mkinitcpio --bootloader=grub "linux-$VERSION" mainline
 fi

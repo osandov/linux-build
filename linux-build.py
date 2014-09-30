@@ -11,7 +11,7 @@ from multiprocessing import cpu_count
 
 from linuxbuild.download import list_releases, download_release
 from linuxbuild.make import CONFIG_TARGETS, configure_kernel, make_kernel
-from linuxbuild.install import install_kernel
+from linuxbuild.install import INITRDS, BOOTLOADERS, install_kernel
 
 
 def main():
@@ -56,9 +56,12 @@ def main():
     parser_make.set_defaults(func=cmd_make)
 
     parser_install = subparsers.add_parser('install', help='install the kernel')
-    # TODO: more arguments so this works for more than Arch Linux on x86.
     parser_install.add_argument('source', metavar='SOURCEDIR', help='kernel source directory')
     parser_install.add_argument('name', metavar='NAME', help='installed kernel name')
+    parser_install.add_argument(
+        '--initrd', '-i', choices=INITRDS, required=True, help='initial ramdisk scheme')
+    parser_install.add_argument(
+        '--bootloader', '-b', choices=BOOTLOADERS, required=True, help='bootloader')
     parser_install.set_defaults(func=cmd_install)
 
     args = parser.parse_args()
@@ -88,7 +91,7 @@ def cmd_make(args):
 
 
 def cmd_install(args):
-    install_kernel(args.source, args.name)
+    install_kernel(args.source, args.name, initrd=args.initrd, bootloader=args.bootloader)
 
 
 if __name__ == '__main__':
