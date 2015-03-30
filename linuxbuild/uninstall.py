@@ -17,7 +17,8 @@ def uninstall_kernel(source, name, initrd, bootloader):
 
     Arguments:
     source -- Kernel source directory
-    name -- Name of the installed kernel
+    name -- Name of the installed kernel, or None if the kernel image and
+    ramdisk should not be uninstalled
     initrd -- Initial ramdisk scheme, or None if the ramdisk should not be
     uninstalled
     bootloader -- Bootloader scheme, or None if the bootloader should not be
@@ -32,20 +33,25 @@ def uninstall_kernel(source, name, initrd, bootloader):
     kernelrelease = subprocess.check_output(['make', '-s', 'kernelrelease'])
     kernelrelease = kernelrelease.decode('utf-8').strip()
 
-    if not _prompt_yes_no('Uninstall %s named %s?' % (kernelrelease, name)):
-        raise ValueError('User aborted.')
+    if name is None:
+        if not _prompt_yes_no('Uninstall %s?' % kernelrelease):
+            raise ValueError('User aborted.')
+    else:
+        if not _prompt_yes_no('Uninstall %s named %s?' % (kernelrelease, name)):
+            raise ValueError('User aborted.')
 
     # Uninstall the kernel modules.
     _echo_call(['rm', '-r', '/lib/modules/%s' % kernelrelease])
 
     # Uninstall the kernel image.
-    _echo_call(['rm', '/boot/vmlinuz-%s' % name])
+    if name is not None:
+        _echo_call(['rm', '/boot/vmlinuz-%s' % name])
 
-    # Remove the initial ramdisk.
-    if initrd == 'mkinitcpio':
-        _echo_call(['rm', '/boot/initramfs-%s.img' % name])
-    elif initrd is not None:
-        assert False
+        # Remove the initial ramdisk.
+        if initrd == 'mkinitcpio':
+            _echo_call(['rm', '/boot/initramfs-%s.img' % name])
+        elif initrd is not None:
+            assert False
 
     # Update the bootloader.
     if bootloader == 'grub':

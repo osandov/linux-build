@@ -67,7 +67,7 @@ def main():
 
     parser_uninstall = subparsers.add_parser('uninstall', help='uninstall the kernel')
     parser_uninstall.add_argument('source', metavar='SOURCEDIR', help='kernel source directory')
-    parser_uninstall.add_argument('name', metavar='NAME', help='installed kernel name')
+    parser_uninstall.add_argument('name', metavar='NAME', nargs='?', help='installed kernel name')
     parser_uninstall.add_argument(
         '--initrd', '-i', choices=INITRDS, required=False, help='initial ramdisk scheme')
     parser_uninstall.add_argument(
