@@ -12,6 +12,7 @@ from multiprocessing import cpu_count
 from linuxbuild.download import list_releases, download_release
 from linuxbuild.make import CONFIG_TARGETS, configure_kernel, make_kernel
 from linuxbuild.install import INITRDS, BOOTLOADERS, install_kernel
+from linuxbuild.uninstall import uninstall_kernel
 
 
 def main():
@@ -64,6 +65,15 @@ def main():
         '--bootloader', '-b', choices=BOOTLOADERS, required=True, help='bootloader')
     parser_install.set_defaults(func=cmd_install)
 
+    parser_uninstall = subparsers.add_parser('uninstall', help='uninstall the kernel')
+    parser_uninstall.add_argument('source', metavar='SOURCEDIR', help='kernel source directory')
+    parser_uninstall.add_argument('name', metavar='NAME', help='installed kernel name')
+    parser_uninstall.add_argument(
+        '--initrd', '-i', choices=INITRDS, required=False, help='initial ramdisk scheme')
+    parser_uninstall.add_argument(
+        '--bootloader', '-b', choices=BOOTLOADERS, required=False, help='bootloader')
+    parser_uninstall.set_defaults(func=cmd_uninstall)
+
     args = parser.parse_args()
     args.func(args)
 
@@ -92,6 +102,10 @@ def cmd_make(args):
 
 def cmd_install(args):
     install_kernel(args.source, args.name, initrd=args.initrd, bootloader=args.bootloader)
+
+
+def cmd_uninstall(args):
+    uninstall_kernel(args.source, args.name, initrd=args.initrd, bootloader=args.bootloader)
 
 
 if __name__ == '__main__':

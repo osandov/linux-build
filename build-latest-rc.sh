@@ -55,4 +55,3 @@ linux-build.py make "linux-$VERSION"
 if [ ! -z "$INSTALL" ]; then
     sudo linux-build.py install --initrd=mkinitcpio --bootloader=grub "linux-$VERSION" mainline
 fi
-rm "linux-${VERSION}.tar" "linux-${VERSION}.tar.xz" "linux-${VERSION}.tar.sign"

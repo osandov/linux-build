@@ -27,6 +27,8 @@ def install_kernel(source, name, initrd, bootloader):
     Arguments:
     source -- Kernel source directory
     name -- Name of the installed kernel
+    initrd -- Initial ramdisk scheme
+    bootloader -- Bootloader scheme
     """
 
     assert initrd in INITRDS
