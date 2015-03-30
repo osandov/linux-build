@@ -1,7 +1,7 @@
 #!/bin/sh
 
 usage () {
-    USAGE_STRING="Usage: $0 [-i]
+    USAGE_STRING="Usage: $0 [-i] OLDCONFIG
        $0 -h
 
 Build and optionally install the latest Linux RC kernel.
@@ -38,13 +38,21 @@ while getopts ":ih" OPT; do
     esac
 done
 
+shift $((OPTIND - 1))
+if [ $# -ne 1 ]; then
+	usage "err"
+fi
+
+OLDCONFIG="$1"
+
 set -e
 
 VERSION="$(linux-build.py list -n 1 mainline)"
 linux-build.py download "$VERSION"
-linux-build.py config --old-config ~/linux-config "linux-$VERSION" olddefconfig
-cp "linux-$VERSION"/.config ~/linux-config
+linux-build.py config --old-config "$OLDCONFIG" "linux-$VERSION" olddefconfig
+cp "linux-$VERSION"/.config "$OLDCONFIG"
 linux-build.py make "linux-$VERSION"
 if [ ! -z "$INSTALL" ]; then
     sudo linux-build.py install --initrd=mkinitcpio --bootloader=grub "linux-$VERSION" mainline
 fi
+rm "linux-${VERSION}.tar" "linux-${VERSION}.tar.xz" "linux-${VERSION}.tar.sign"
